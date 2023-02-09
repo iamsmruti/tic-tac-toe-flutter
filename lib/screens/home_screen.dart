@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -17,13 +19,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final gp = Provider.of<GameProvider>(context, listen: false);
-
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection("games")
-          .where("name", arrayContains: gp.uid)
-          .get()
-          .asStream(),
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance.collection("games").snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           return Scaffold(
@@ -47,9 +44,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: snapshot.data!.docs.length,
                 itemBuilder: (context, index) {
-                  return GameCard(
-                    game: snapshot.data!.docs[index],
-                  );
+                  if ((snapshot.data!.docs[index].data()["name"] as List)
+                      .contains(gp.uid)) {
+                    return GameCard(
+                      game: snapshot.data!.docs[index],
+                      gameId: snapshot.data!.docs[index].id,
+                    );
+                  } else {
+                    return Container();
+                  }
                 },
               ),
             ),

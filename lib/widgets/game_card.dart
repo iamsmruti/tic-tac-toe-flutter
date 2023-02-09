@@ -6,8 +6,9 @@ import 'package:tic_tac_toe_v2/screens/play_screen.dart';
 
 class GameCard extends StatefulWidget {
   final DocumentSnapshot game;
+  final String gameId;
 
-  const GameCard({super.key, required this.game});
+  const GameCard({super.key, required this.game, required this.gameId});
 
   @override
   State<GameCard> createState() => _GameCardState();
@@ -19,7 +20,6 @@ class _GameCardState extends State<GameCard> {
   @override
   Widget build(BuildContext context) {
     final gp = Provider.of<GameProvider>(context, listen: false);
-
     gp
         .getUsername(widget.game['player1'], widget.game['player2'])
         .then((value) {
@@ -65,7 +65,7 @@ class _GameCardState extends State<GameCard> {
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
-                              PlayScreen(game: widget.game, rival: _username),
+                              PlayScreen(rival: _username,gameId: widget.gameId,),
                         ),
                       );
                     },
