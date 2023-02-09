@@ -95,8 +95,6 @@ class _OnboardScreenState extends State<OnboardScreen> {
                     validator: (value) {
                       if (value!.isEmpty) {
                         return "Please enter your name";
-                      } else if (value.length < 3) {
-                        return "Name must be at least 3 characters";
                       }
 
                       return null;
@@ -115,6 +113,8 @@ class _OnboardScreenState extends State<OnboardScreen> {
                         return "Please enter your username";
                       } else if (value.length < 6) {
                         return "Username must be at least 6 characters";
+                      } else if (value.length > 10) {
+                        return "Username must be at most 12 characters";
                       }
 
                       return null;

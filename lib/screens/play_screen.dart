@@ -1,8 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tic_tac_toe_v2/utils/game_logic.dart';
-import 'package:tic_tac_toe_v2/widgets/game_tile.dart';
 import 'package:tic_tac_toe_v2/widgets/snackbar.dart';
 
 import '../providers/game_provider.dart';
@@ -18,12 +16,7 @@ class PlayScreen extends StatefulWidget {
 }
 
 class _PlayScreenState extends State<PlayScreen> {
-  var player1;
-  var player2;
-  var activePlayer = '1';
   GameProvider? gp;
-
-  List<GameTile> _gameTiles = [];
 
   @override
   void initState() {
@@ -31,20 +24,33 @@ class _PlayScreenState extends State<PlayScreen> {
     WidgetsBinding.instance.addPostFrameCallback(
       (timeStamp) {
         gp = Provider.of<GameProvider>(context, listen: false);
+        
       },
     );
-
-    print(widget.gameId);
   }
 
   void playGameOnline(int index, Map<String, dynamic> game) {
-    if (game["turn"] == gp?.uid) {
-      (game["board"] as List).insert(index, gp?.uid);
-      FirebaseFirestore.instance
-          .collection("games")
-          .doc(widget.gameId)
-          .update({"board": game["board"], "turn": widget.rival});
-      checkOnlineWinner(game["board"]);
+    if (game["turn"] == gp?.uid &&
+        game["board"][index] == "" &&
+        game["isFinished"] == false) {
+      (game["board"] as List)[index] = gp?.uid;
+      FirebaseFirestore.instance.collection("games").doc(widget.gameId).update({
+        "board": game["board"],
+        "turn":
+            game["turn"] == game["player1"] ? game["player2"] : game["player1"],
+        "winner": checkOnlineWinner(game["board"]),
+        "isFinished": checkOnlineWinner(game["board"]) != "" ? true : false,
+      });
+    } else {
+      if (game["isFinished"] == true) {
+        showSnackBar(context, "Game is finished, play again");
+      }
+
+      showSnackBar(context, "Not your turn");
+    }
+
+    if (checkOnlineWinner(game["board"]) != "") {
+      showSnackBar(context, "Winner is ${checkOnlineWinner(game["board"])}");
     }
   }
 
@@ -71,13 +77,8 @@ class _PlayScreenState extends State<PlayScreen> {
     return "";
   }
 
-  void resetGame() {
-    setState(() {
-      player1 = List.empty(growable: true);
-      player2 = List.empty(growable: true);
-
-      activePlayer = '1';
-    });
+  void resetGame(rival) {
+    gp?.newGame(context, rival);
   }
 
   @override
@@ -108,28 +109,22 @@ class _PlayScreenState extends State<PlayScreen> {
                       ),
                       const SizedBox(height: 5),
                       const Text(
-                        "Turn of",
+                        "Your Piece",
                         style: TextStyle(
                           fontSize: 18,
                         ),
                       ),
                       const SizedBox(height: 10),
-                      (activePlayer == '1')
-                          ? Image.asset(
-                              "assets/images/cross.png",
-                              height: 50,
-                              width: 50,
-                            )
-                          : Image.asset(
-                              "assets/images/circle.png",
-                              height: 50,
-                              width: 50,
-                            ),
+                      Image.asset(
+                        "assets/images/cross.png",
+                        height: 50,
+                        width: 50,
+                      ),
                       const SizedBox(height: 24),
                       Container(
                         height: 50,
                         color: Colors.pink[100],
-                        child: const Center(
+                        child: Center(
                           child: Text(
                             "Game Board",
                             style: TextStyle(
@@ -155,11 +150,8 @@ class _PlayScreenState extends State<PlayScreen> {
                             print(gp?.uid);
                             return GestureDetector(
                               onTap: () {
-                                _gameTiles[index].enabled &&
-                                        checkWinner(player1, player2) == -1
-                                    ? playGameOnline(
-                                        index, snapshot.data!.data()!)
-                                    : null;
+                                playGameOnline(
+                                    index % 9, snapshot.data!.data()!);
                               },
                               child: Container(
                                 decoration: BoxDecoration(
@@ -171,21 +163,21 @@ class _PlayScreenState extends State<PlayScreen> {
                                 child: Center(
                                   child: snapshot.data?.data()!["board"]
                                               [index] ==
-                                          widget.rival
+                                          gp?.uid
                                       ? Image.asset(
-                                          "assets/images/circle.png",
+                                          "assets/images/cross.png",
                                           height: 50,
                                           width: 50,
                                         )
                                       : snapshot.data?.data()!["board"]
                                                   [index] ==
-                                              gp?.uid
-                                          ? Image.asset(
-                                              "assets/images/cross.png",
+                                              ""
+                                          ? null
+                                          : Image.asset(
+                                              "assets/images/circle.png",
                                               height: 50,
                                               width: 50,
-                                            )
-                                          : Container(),
+                                            ),
                                 ),
                               ),
                             );
@@ -195,14 +187,27 @@ class _PlayScreenState extends State<PlayScreen> {
                       const SizedBox(height: 24),
                       Container(
                           height: 50,
-                          color: Colors.pink[500],
+                          color: snapshot.data?.data()!["isFinished"] != true
+                              ? Colors.black45
+                              : Colors.pink[500],
                           child: Center(
                             child: TextButton(
                               onPressed: () {
-                                resetGame();
+                                if (snapshot.data?.data()!["isFinished"] ==
+                                    true) {
+                                  resetGame(snapshot.data?.data()!["player1"] ==
+                                          gp?.uid
+                                      ? snapshot.data?.data()!["player2"]
+                                      : snapshot.data?.data()!["player1"]);
+                                } else {
+                                  showSnackBar(
+                                      context, "Game is not finished yet");
+                                }
                               },
-                              child: const Text(
-                                "Reset Game",
+                              child: Text(
+                                snapshot.data?.data()!["isFinished"] == true
+                                    ? "Reset Game"
+                                    : "Match is still on",
                                 style: TextStyle(
                                   fontSize: 18,
                                   color: Colors.white,

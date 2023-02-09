@@ -20,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final gp = Provider.of<GameProvider>(context, listen: false);
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance.collection("games").snapshots(),
+      stream: FirebaseFirestore.instance.collection("games").orderBy("updatedAt", descending: true).snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           return Scaffold(

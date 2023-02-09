@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tic_tac_toe_v2/providers/auth_provider.dart';
 import 'package:tic_tac_toe_v2/providers/game_provider.dart';
+import 'package:tic_tac_toe_v2/screens/onboard_screen.dart';
 import 'package:tic_tac_toe_v2/screens/start_screen.dart';
 
 void main() async {

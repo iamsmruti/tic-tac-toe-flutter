@@ -11,12 +11,12 @@ class NewGameScreen extends StatefulWidget {
 }
 
 class _NewGameScreenState extends State<NewGameScreen> {
-  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
 
   void createNewGame() {
     final ap = Provider.of<GameProvider>(context, listen: false);
     ap.getUser();
-    ap.checkExistingGames(context, "+91${emailController.text.trim()}");
+    ap.checkExistingGames(context, "+91${phoneController.text.trim()}");
   }
 
   @override
@@ -45,20 +45,20 @@ class _NewGameScreenState extends State<NewGameScreen> {
           const SizedBox(height: 24),
           const SizedBox(height: 8),
           TextField(
-            controller: emailController,
+            controller: phoneController,
             decoration: const InputDecoration(
-              labelText: "Email",
+              labelText: "Phone Number",
               border: OutlineInputBorder(),
-              hintText: "Enter your friend's name",
+              hintText: "Enter your friend's phone number",
             ),
           ),
           const SizedBox(height: 8),
           ElevatedButton(
               onPressed: () {
-                if (emailController.text.trim().isNotEmpty) {
+                if (phoneController.text.trim().isNotEmpty) {
                   createNewGame();
                 } else {
-                  showSnackBar(context, "Please enter a valid email");
+                  showSnackBar(context, "Please enter a valid phone number");
                 }
               },
               child: const Text("Create Game"))
